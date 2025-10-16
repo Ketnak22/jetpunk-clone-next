@@ -1,0 +1,128 @@
+.quiz-type-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 10px;
+}
+
+.quiz-type-label {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.quiz-type-select {
+    font-size: 16px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+    color: #222;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(40,167,69,0.04);
+    cursor: pointer;
+}
+
+.quiz-type-select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40,167,69,0.12);
+}
+
+.quiz-type-select option {
+    background: #fff;
+    color: #222;
+}
+
+.plus-btn {
+    background: linear-gradient(90deg, #28a745 60%, #218838 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(40,167,69,0.15);
+    transition: 0.75s, transform 0.75s;
+    cursor: pointer;
+}
+
+.plus-btn:hover {
+    background: linear-gradient(#218838 60%, #28a745 100%);
+    transform: scale(1.08);
+}
+
+.remove-btn {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+}
+
+.answer-inputs-div {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.answers-input-wrapper-div {
+    display: flex;
+    align-items: center;
+}
+
+.key-answer-div {
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 20px;
+    margin-top: 18px;
+    display: flex;
+    align-items: flex-start;
+    min-width: 320px;
+
+    gap: 16px;
+}
+
+.key-inputs-div, .answer-inputs-div {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.creator-div {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 32px 24px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.question-input {
+    font-size: 18px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 18px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.question-input:focus {
+    border-color: #28a745;
+}
