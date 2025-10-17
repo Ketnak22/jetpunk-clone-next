@@ -112,7 +112,8 @@ export default function Home() {
                                 <div className={styles['uploader-input']} key={i}>
                                     <input
                                         type="text"
-                                        maxLength={100}
+                                        minLength={1}
+                                        maxLength={50}
                                         placeholder={path.id || ''}
                                         ref={el => { inputRefs.current[i] = el; }}
                                         onFocus={() => setHoveredIndex(i)}

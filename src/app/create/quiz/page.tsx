@@ -9,6 +9,7 @@ export default function Home() {
     const [keysInputs, setKeysInputs] = useState<string[]>([]);
 
     const quizTypeSelectRef = useRef<HTMLSelectElement>(null);
+    const nameInputRef = useRef<HTMLInputElement>(null);
 
     const handleAddInput = () => {
         setAnswersInputs(prev => [...prev, ""]);
@@ -26,9 +27,48 @@ export default function Home() {
         }
     }
 
+    const handleSendButton = () => {
+        if (!nameInputRef.current) return;
+        if (!quizTypeSelectRef.current) return;
+        if (answersInputs.length <= 0) return;
+        if (answersInputs.some(ans => ans.trim() === "")) return;
+        if (quizTypeSelectRef.current.value === "matchingQuiz") {
+            if (keysInputs.length !== answersInputs.length) return;
+            if (keysInputs.some(key => key.trim() === "")) return;
+        }
+
+        const preparedJson: { question: string; type: string; answers: string[]; keys?: string[] } = {
+            type: quizTypeSelectRef.current?.value,
+            question: (document.querySelector(`.${styles['question-input']}`) as HTMLInputElement).value,
+            answers: answersInputs.filter(ans => ans.trim() !== ""),
+        };
+
+        if (quizTypeSelectRef.current.value === "matchingQuiz") {
+            preparedJson['keys'] = keysInputs.filter(key => key.trim() !== "");
+        }
+
+        fetch("/api/upload/quiz", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(preparedJson),
+        }).then(res => {
+            if (res.ok) {
+                console.log("Quiz data sent successfully!");
+            } else {
+                res.text().then(text => {
+                    console.error("Error sending quiz data:", text);
+                });              
+            }
+        }).catch(err => {
+            console.error("Error sending quiz data:", err);
+        });
+    };
+
     return (
         <div className={styles['creator-div']}>
-            <input type="text" className={styles['question-input']} placeholder="Wpisz pytanie..."/>
+            <input type="text" className={styles['question-input']} placeholder="Wpisz pytanie..." ref={nameInputRef} minLength={1} maxLength={50} />
 
             <div className={styles['quiz-type-wrapper']}>
                 <label className={styles['quiz-type-label']} htmlFor="quiz-type-select">
@@ -51,7 +91,7 @@ export default function Home() {
                     <div className={styles['key-inputs-div']}>
                         {keysInputs.map((value, idx) => (
                             <div key={idx}>
-                                <input type="text"value={value || ""} onChange={(e) => {
+                                <input type="text"value={value || ""} minLength={1} maxLength={50} onChange={(e) => {
                                     const newKeys = [...keysInputs];
                                     newKeys[idx] = e.target.value;
                                     setKeysInputs(newKeys);
@@ -65,7 +105,7 @@ export default function Home() {
                 <div className={styles['answer-inputs-div']}>
                     {answersInputs.map((value, idx) => (
                         <div key={idx} className={styles['answers-input-wrapper-div']}>
-                            <input type="text" value={value || ""} onChange={(e) => {
+                            <input type="text" value={value || ""} minLength={1} maxLength={50} onChange={(e) => {
                                 const newInputs = [...answersInputs];
                                 newInputs[idx] = e.target.value;
                                 setAnswersInputs(newInputs);
@@ -76,7 +116,14 @@ export default function Home() {
                 </div>
                 
             </div>
-            <button className={styles['plus-btn']} onClick={handleAddInput}>+</button>
+
+            <div>
+                <button className={styles['plus-btn']} onClick={handleAddInput}>+</button>
+            </div>
+
+            <div className={styles['send-btn-wrapper']}>
+                <button className={styles['send-btn']} onClick={handleSendButton}>Wyślij</button>
+            </div>
             {/* 
             TODO:
                 - add form and submit to backend
