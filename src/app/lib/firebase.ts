@@ -1,6 +1,9 @@
 'server-only';
 
 import admin from 'firebase-admin';
+import { vi } from 'zod/locales';
+
+type QuizType = 'map' | 'quiz' | 'matchingQuiz';
 
 // Only initialize once (for server-side)
 if (!admin.apps.length) {
@@ -20,14 +23,18 @@ const firestoreDb = admin.firestore();
  * @param type 'map' | 'quiz' | 'matchingQuiz'
  * @param name string
  * @param filename string
+ * @param jsonData any
+ * @param svgData string | undefined
  */
-async function addQuizRecordFirestore(type: 'map' | 'quiz' | 'matchingQuiz', name: string, filename: string) {
+async function addQuizRecordFirestore(type: QuizType, name: string, jsonData: any, svgData?: string) {
   try {
     const docRef = await firestoreDb.collection('quizzes').add({
       type,
       name,
-      filename,
+      jsonData,
+      svgData: svgData || null,
       createdAt: new Date(),
+      viewCount: 0
     });
     return docRef.id;
   } catch (error) {
@@ -51,7 +58,22 @@ async function getQuizzesNames() {
     }
 }
 
-export { firestoreDb, addQuizRecordFirestore, getQuizzesNames };
+/**
+ * Get popular quizzes from Firestore (backend only)
+ * @returns Array of popular quizzes
+ */
+async function getPopularQuizzes(limit: number = 3) {
+    try {
+        const snapshot = await firestoreDb.collection('quizzes').orderBy('viewCount', 'desc').limit(limit).get();
+        const popularQuizzes = snapshot.docs.map(doc => doc.data().name);
+        return popularQuizzes;
+    } catch (error) {
+        console.error('Error fetching popular quizzes from Firestore:', error);
+        throw error;
+    }
+}
+
+export { firestoreDb, addQuizRecordFirestore, getQuizzesNames, getPopularQuizzes };
 
 /*
 import * as admin from 'firebase-admin';

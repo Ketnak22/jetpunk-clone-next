@@ -83,8 +83,81 @@ export default function Home() {
         });
     }, [hoveredIndex, svgContent, paths, initialPathStyle]);
 
+    const handleUploadClick = () => {
+        if (!originalSvgContent) return;
+        if (!nameInputRef.current?.value) return;
+
+        // Parse original SVG
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
+        const pathNodes = doc.querySelectorAll('path');
+
+        // Serialize and sanitize SVG
+        const serializer = new XMLSerializer();
+        const newSvg = serializer.serializeToString(doc.documentElement);
+        const sanitizedSvg = DOMPurify.sanitize(newSvg);
+        const svgBlob = new Blob([sanitizedSvg], { type: 'image/svg+xml' });
+
+        // Create mapping of original ids to new ids
+        const pathIdMapping: IdPathMapping = {};
+
+        // Replace ids with input values or empty string when disabled
+        pathNodes.forEach((path, i) => {
+            if (inputRefs.current[i]?.disabled) return;
+            if (path.id) {
+                pathIdMapping[path.id] = inputRefs.current[i]?.value || path.id;
+            }
+        });
+
+        const formData = new FormData();
+        formData.append('svg', svgBlob, 'map.svg');
+        const jsonData = pathIdMapping ? JSON.stringify(pathIdMapping) : '{}';
+        const jsonBlob = new Blob([jsonData], { type: 'application/json' });
+        formData.append('json', jsonBlob, 'data.json');
+        formData.append('name', nameInputRef.current.value);
+
+        fetch('/api/upload/map', {
+            method: 'POST',
+            body: formData,
+        }).then(response => {
+            if (response.status === 200) {
+                console.log('Map uploaded successfully');
+
+                window.location.href = '/';
+            } else {
+                response.text().then(errorText => {
+                    console.error(`Error uploading map: ${response.status} - ${errorText}`);
+                });
+            }
+        }).catch(error => {
+            console.error('Error uploading map:', error);
+        })
+
+    };
+
+    const handleRemoveClick = (index: number, pathId: string) => {
+        if (inputRefs.current[index]) {
+            if (inputRefs.current[index]!.disabled) {
+                inputRefs.current[index]!.disabled = false;
+
+                buttonRefs.current[index]!.textContent = 'X';
+                buttonRefs.current[index]!.style.backgroundColor = '#ff4d4f'; // light red
+            } else {
+                inputRefs.current[index]!.disabled = true;
+
+                inputRefs.current[index]!.value = '';
+                inputRefs.current[index]!.placeholder = pathId || '';
+
+                buttonRefs.current[index]!.textContent = '↺';
+                buttonRefs.current[index]!.style.backgroundColor = '#f0ad4e'; // light orange
+            }
+        }
+        const updatedPaths = [...paths];
+        updatedPaths[index].id = '';
+        setPaths(updatedPaths);
+    }
     return (
-    <div className={styles['uploader-container']}>
+        <div className={styles['uploader-container']}>
             {!svgContent && paths.length === 0 &&
                 <Dropzone accept={{ 'image/svg+xml': ['.svg'] }} onDrop={handleDrop}>
                     {({ getRootProps, getInputProps }) => (
@@ -119,96 +192,22 @@ export default function Home() {
                                         onFocus={() => setHoveredIndex(i)}
                                         onMouseEnter={() => setHoveredIndex(i)}
                                     />
-                                    <button 
+                                    <button
                                         className={styles['uploader-input-btn']}
-                                        ref={el => { buttonRefs.current[i] = el } } 
-                                        onClick={() => {
-                                        if (inputRefs.current[i]) {
-                                            if (inputRefs.current[i]!.disabled) {
-                                                inputRefs.current[i]!.disabled = false;      
-
-                                                buttonRefs.current[i]!.textContent = 'X';
-                                                buttonRefs.current[i]!.style.backgroundColor = '#ff4d4f'; // light red
-                                            } else {
-                                                inputRefs.current[i]!.disabled = true;
-
-                                                inputRefs.current[i]!.value = '';
-                                                inputRefs.current[i]!.placeholder = path.id || '';
-                                            
-                                                buttonRefs.current[i]!.textContent = '↺';
-                                                buttonRefs.current[i]!.style.backgroundColor = '#f0ad4e'; // light orange
-                                            }
-                                        }
-                                        const updatedPaths = [...paths];
-                                        updatedPaths[i].id = '';
-                                        setPaths(updatedPaths);
-                                    }}>X</button>
+                                        ref={el => { buttonRefs.current[i] = el }}
+                                        onClick={() => handleRemoveClick(i, path.id)}>X</button>
                                 </div>
                             ))}
                         </div>
 
                         <div className={styles['uploader-down-div']}>
-                            <input 
+                            <input
                                 type='text'
                                 ref={nameInputRef}
                                 placeholder='Wpisz nazwę mapy...'
                                 className={styles['uploader-name-input']}
                             />
-                            <button className={styles['uploader-btn']} onClick={() => {
-                                if (!originalSvgContent) return;
-                                if (!nameInputRef.current?.value) return;
-
-                                // Parse original SVG
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
-                                const pathNodes = doc.querySelectorAll('path');
-
-                                // Serialize and sanitize SVG
-                                const serializer = new XMLSerializer();
-                                const newSvg = serializer.serializeToString(doc.documentElement);
-                                const sanitizedSvg = DOMPurify.sanitize(newSvg);
-                                const svgBlob = new Blob([sanitizedSvg], { type: 'image/svg+xml' });
-
-                                // Create mapping of original ids to new ids
-                                const pathIdMapping: IdPathMapping = {};
-
-                                // Replace ids with input values or empty string when disabled
-                                pathNodes.forEach((path, i) => {
-                                    if (inputRefs.current[i]?.disabled) return;
-                                    if (path.id) {
-                                        pathIdMapping[path.id] = inputRefs.current[i]?.value || path.id;
-                                    }
-                                });
-
-                                const formData = new FormData();
-                                formData.append('svg', svgBlob, 'map.svg');
-                                const jsonData = pathIdMapping ? JSON.stringify(pathIdMapping) : '{}';
-                                const jsonBlob = new Blob([jsonData], { type: 'application/json' });
-                                formData.append('json', jsonBlob, 'data.json');
-                                formData.append('name', nameInputRef.current.value);
-
-                                fetch('/api/upload/map', {
-                                    method: 'POST',
-                                    body: formData,
-                                }).then(response => {
-                                    if (response.status === 200) {
-                                        console.log('Map uploaded successfully');
-                                    } else {
-                                        response.text().then(errorText => {
-                                            console.error(`Error uploading map: ${response.status} - ${errorText}`);
-                                        });
-                                    }
-                                }).catch(error => {
-                                    console.error('Error uploading map:', error);
-                                })
-
-                                /* TODO
-                                - handle response properly
-                                - exit to main page after upload
-                                - validate data on backend and frontend (name, filenames length) using some kind of library
-                                */
-
-                            }}>Wyślij</button>
+                            <button className={styles['uploader-btn']} onClick={handleUploadClick}>Wyślij</button>
                         </div>
                     </div>
                 </>

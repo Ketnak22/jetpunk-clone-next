@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { v4 as uuidv4 } from 'uuid';
-
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -57,17 +55,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Keys are required and must match the number of answers for matching quizzes.' }, { status: 400 });
         }
     }
-    // Save file and add record to the database
-    const baseFilename = uuidv4();
-    const jsonFilename = `${baseFilename}.json`;
 
-    const filesDir = path.join(process.cwd(), 'files');
-    await fs.mkdir(filesDir, { recursive: true });
-    const filePath = path.join(filesDir, jsonFilename);
-
-    await fs.writeFile(filePath, JSON.stringify(validatedJSON.data, null, 2), 'utf-8');
-
-    await addQuizRecordFirestore(validatedJSON.data.type, name, baseFilename);
+    // Add record to Firestore
+    await addQuizRecordFirestore(validatedJSON.data.type, name, JSON.stringify(validatedJSON.data), undefined);
 
     return NextResponse.json({ status: 200 });
 }

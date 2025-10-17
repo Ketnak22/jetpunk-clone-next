@@ -1,0 +1,95 @@
+/* main {
+    margin-top: 30px;
+    margin-bottom: 0;
+    margin-left: 20vw;
+    margin-right: 20vw;
+}
+   */
+ .headerElementsContainer {
+    margin-left: auto;
+    margin-right: auto;
+    width: 60vw;
+    height: 100%;
+}
+ .navContainer * {
+    float: left;
+    height: 30px;
+    margin-right: 5px;
+}
+ .searchHolder {
+    position: relative;
+}
+ .searchHolderInput {
+   width: 100%;
+    padding-right: 50px;
+    height: 30px;
+    box-sizing: border-box;
+}
+  
+ .searchHolderButton {
+    position: absolute;
+    right: -8px;
+    top: 5px;
+    height: 20px;
+    border: none;
+    background: none;
+    color: white;
+    padding: 0 10px;
+    cursor: pointer;
+}
+          
+  
+ .searchHolderButtonImg {
+    height: 100%;
+    width: 80%;
+}
+ .navContainer {
+    float: right;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+ .jetpunkLogo {
+    width: 250px;
+}
+ .searchImg {
+    width: 10px;
+}
+ .header {
+    width: 100%;
+    height: 45px;
+    background-color: brown;
+}
+ .titleHolder {
+    width: 50%;
+}
+ .quizList {
+    background-color: white;
+    height: 80vh;
+    width: 50%;
+    border-radius: 30px;
+    padding-top: 20px;
+}
+ .quizElementContainer {
+    margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 30px;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    padding: 5px;
+}
+ .popularQuizes {
+    width: 35%;
+    height: 70vh;
+    background-color: white;
+    float: right;
+    padding: 20px;
+    border-radius: 10px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
+  

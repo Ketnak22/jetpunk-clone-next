@@ -57,6 +57,8 @@ export default function Home() {
         }).then(res => {
             if (res.ok) {
                 console.log("Quiz data sent successfully!");
+
+                window.location.href = '/';
             } else {
                 res.text().then(text => {
                     console.error("Error sending quiz data:", text);

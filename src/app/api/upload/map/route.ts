@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { JSDOM } from 'jsdom';
 import createDOMPurify from 'dompurify';
+import { addQuizRecordFirestore } from '@/app/lib/firebase';
 
 // Set up DOMPurify with JSDOM
 const window = new JSDOM('').window;
@@ -59,13 +60,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'JSON file does not match the required schema.' }, { status: 400 });
     }
 
-    // 3. Process the file data
-    // const buffer = Buffer.from(await file.arrayBuffer());
-
-    // You can now process the buffer (e.g., save it to a cloud storage like S3)
-    console.log(`Received SVG file: ${svgFile.name}, size: ${svgFile.size} bytes`);
-    console.log(`Received JSON file: ${jsonFile.name}, size: ${jsonFile.size} bytes`);
-    console.log(`Name data: ${nameData}`);
+    // Add record to Firestore
+    await addQuizRecordFirestore('map', nameData, JSON.stringify(jsonValidation.data), sanitizedSVG);
 
     return NextResponse.json({ status: 200 });
   } catch (error) {
