@@ -47,12 +47,13 @@ export default function Home() {
             preparedJson['keys'] = keysInputs.filter(key => key.trim() !== "");
         }
 
+        const formData = new FormData();
+        formData.append("quizData", JSON.stringify(preparedJson));
+        formData.append("name", nameInputRef.current.value);
+
         fetch("/api/upload/quiz", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(preparedJson),
+            body: formData,
         }).then(res => {
             if (res.ok) {
                 console.log("Quiz data sent successfully!");
