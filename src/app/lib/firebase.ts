@@ -73,40 +73,62 @@ async function getPopularQuizzes(limit: number = 3) {
     }
 }
 
-export { firestoreDb, addQuizRecordFirestore, getQuizzesNames, getPopularQuizzes };
-
-/*
-import * as admin from 'firebase-admin';
-
-// Initialize Firebase Admin SDK if it hasn't been initialized already
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle multiline key
-    }),
-    // Optional: specify databaseURL if using other services like Realtime Database
-    // databaseURL: "https://<DATABASE_NAME>.firebaseio.com",
-  });
-}
-
-const db = admin.firestore();
-
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
+/**
+ * Increment view count for a quiz in Firestore (backend only)
+ * @param quizId string
+ */
+async function incrementQuizViewCount(quizId: string) {
     try {
-      const { dataToSave } = req.body;
-      const docRef = await db.collection('yourCollection').add(dataToSave);
-      res.status(200).json({ message: 'Document added successfully!', id: docRef.id });
+        const quizRef = firestoreDb.collection('quizzes').doc(quizId);
+        await quizRef.update({
+            viewCount: admin.firestore.FieldValue.increment(1)
+        });
     } catch (error) {
-      console.error("Error writing document:", error);
-      res.status(500).json({ error: 'Failed to write document' });
+        console.error('Error incrementing view count:', error);
+        throw error;
     }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
 }
 
-*/
+/**
+ * Get quiz by ID from Firestore (backend only)
+ * @param quizId string
+ * @returns Quiz data
+ */
+async function getQuizById(quizId: string) {
+    try {
+        const quizRef = firestoreDb.collection('quizzes').doc(quizId);
+        const doc = await quizRef.get();
+        if (doc.exists) {
+            return doc.data();
+        } else {
+            throw new Error('Quiz not found');
+        }
+    } catch (error) {
+        console.error('Error fetching quiz by ID:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get quiz type by ID from Firestore (backend only)
+ * @param quizId string
+ * @returns Quiz type
+ */
+async function getQuizTypeById(quizId: string): Promise<QuizType | null> {
+    try {
+        const quizRef = firestoreDb.collection('quizzes').doc(quizId);
+        const doc = await quizRef.get();
+        if (doc.exists) {
+            const data = doc.data();
+            return data?.type || null;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching quiz type by ID:', error);
+        throw error;
+    }
+}
+
+
+export { addQuizRecordFirestore, getQuizzesNames, getPopularQuizzes, incrementQuizViewCount, getQuizById, getQuizTypeById };

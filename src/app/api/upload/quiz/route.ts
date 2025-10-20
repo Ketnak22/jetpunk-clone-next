@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Add record to Firestore
-    await addQuizRecordFirestore(validatedJSON.data.type, name, JSON.stringify(validatedJSON.data), undefined);
+    const { type, ...quizDataWithoutType } = validatedJSON.data;
+    await addQuizRecordFirestore(type, name, JSON.stringify(quizDataWithoutType), undefined);
 
     return NextResponse.json({ status: 200 });
 }
