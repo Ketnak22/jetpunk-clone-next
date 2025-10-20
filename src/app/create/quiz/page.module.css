@@ -131,7 +131,12 @@
     display: flex;
     justify-content: center;
     margin-top: 24px;
+}
 
+.headers-div {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 /* From Uiverse.io by portseif */

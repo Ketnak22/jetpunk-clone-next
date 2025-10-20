@@ -1,9 +1,10 @@
 type QuizData = {
   id?: string;
   question?: string;
-  type: 'quiz | matchingQuiz';
+  type: 'quiz' | 'matchingQuiz';
   answers: string[];
   keys?: string[];
+  headers?: string[];
   createdAt?: number | Date;
 };
 

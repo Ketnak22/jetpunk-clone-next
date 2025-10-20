@@ -4,12 +4,15 @@ import styles from "./page.module.css"
 
 import { ChangeEvent, useRef, useState } from 'react';
 
-export default function Home() {
+export default function Page() {
     const [answersInputs, setAnswersInputs] = useState<string[]>([]);
     const [keysInputs, setKeysInputs] = useState<string[]>([]);
 
     const quizTypeSelectRef = useRef<HTMLSelectElement>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
+
+    const keyHeaderRef = useRef<HTMLInputElement>(null);
+    const answerHeaderRef = useRef<HTMLInputElement>(null);
 
     const handleAddInput = () => {
         setAnswersInputs(prev => [...prev, ""]);
@@ -32,12 +35,15 @@ export default function Home() {
         if (!quizTypeSelectRef.current) return;
         if (answersInputs.length <= 0) return;
         if (answersInputs.some(ans => ans.trim() === "")) return;
+        if (nameInputRef.current.value.trim() === "") return;
         if (quizTypeSelectRef.current.value === "matchingQuiz") {
             if (keysInputs.length !== answersInputs.length) return;
             if (keysInputs.some(key => key.trim() === "")) return;
+            if (keyHeaderRef.current === null || answerHeaderRef.current === null) return;
+            if (keyHeaderRef.current.value.trim() === "" || answerHeaderRef.current.value.trim() === "") return;
         }
 
-        const preparedJson: { question: string; type: string; answers: string[]; keys?: string[] } = {
+        const preparedJson: { question: string; type: string; answers: string[]; keys?: string[], headers?: string[] } = {
             type: quizTypeSelectRef.current?.value,
             question: (document.querySelector(`.${styles['question-input']}`) as HTMLInputElement).value,
             answers: answersInputs.filter(ans => ans.trim() !== ""),
@@ -45,6 +51,10 @@ export default function Home() {
 
         if (quizTypeSelectRef.current.value === "matchingQuiz") {
             preparedJson['keys'] = keysInputs.filter(key => key.trim() !== "");
+            preparedJson['headers'] = [
+                keyHeaderRef.current?.value ?? "",
+                answerHeaderRef.current?.value ?? ""
+            ];
         }
 
         const formData = new FormData();
@@ -88,6 +98,14 @@ export default function Home() {
                     <option value="matchingQuiz">Matching Quiz</option>
                 </select>
             </div>
+
+
+            {quizTypeSelectRef.current?.value === "matchingQuiz" && (
+                <div className={styles['headers-div']}>
+                    <input type="text" ref={keyHeaderRef} className={styles['question-input']} placeholder="Wpisz nagłówek klucza" minLength={1} maxLength={50} />
+                    <input type="text" ref={answerHeaderRef} className={styles['question-input']} placeholder="Wpisz nagłówek odpowiedzi" minLength={1} maxLength={50} />
+                </div>
+            )}
 
             <div className={styles['key-answer-div']}>
                 {quizTypeSelectRef.current?.value === "matchingQuiz" &&

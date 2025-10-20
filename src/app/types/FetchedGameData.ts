@@ -4,17 +4,17 @@ interface QuizJSONData {
     question: string;
     answers: string[];
     keys?: string[];
+    headers?: string[];
 }
 
 type MapJSONData = Record<string, string>;  
 
 interface FetchedGameData {
-    id: string;
     type: QuizType;
     name: string;
-    jsonData: MapJSONData | QuizJSONData;
+    jsonData: string;
     svgData?: string | null;
     createdAt: number | Date;
 }
 
-export default FetchedGameData;
+export { FetchedGameData, QuizJSONData, MapJSONData };

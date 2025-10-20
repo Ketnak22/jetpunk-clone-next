@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import QuizPlayer from "./QuizPlayer";
 
 import QuizType from "@/app/types/QuizType";
+import MapPlayer from "./MapPlayer";
 
 let quizType: QuizType | null = null;
 
@@ -29,7 +30,10 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return <>
     {(quizType === 'quiz' || quizType === "matchingQuiz") &&
-        <QuizPlayer id={id} />
+        <QuizPlayer quizId={id} />
+    }
+    {quizType === 'map' &&
+        <MapPlayer mapId={id} />
     }
   </>;
   
