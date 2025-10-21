@@ -17,4 +17,4 @@ interface FetchedGameData {
     createdAt: number | Date;
 }
 
-export { FetchedGameData, QuizJSONData, MapJSONData };
+export type { FetchedGameData, QuizJSONData, MapJSONData };

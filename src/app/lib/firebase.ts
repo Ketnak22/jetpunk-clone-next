@@ -1,9 +1,7 @@
 'server-only';
 
 import admin from 'firebase-admin';
-import { vi } from 'zod/locales';
-
-type QuizType = 'map' | 'quiz' | 'matchingQuiz';
+import type QuizType from '@/app/types/QuizType';
 
 // Only initialize once (for server-side)
 if (!admin.apps.length) {
@@ -45,18 +43,21 @@ async function addQuizRecordFirestore(type: QuizType, name: string, jsonData: an
 
 /**
  * Get all quiz names from Firestore (backend only)
- * @returns Array of quiz names
+ * @returns Array of quiz ids with names
  */
-async function getQuizzesNames() {
+async function getQuizzesIdsWithNames(): Promise<{ id: string, name: string }[]> {
     try {
         const snapshot = await firestoreDb.collection('quizzes').get();
-        const quizNames = snapshot.docs.map(doc => doc.data().name);
-        return quizNames;
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name
+        }));
     } catch (error) {
         console.error('Error fetching quiz names from Firestore:', error);
         throw error;
     }
 }
+
 
 /**
  * Get popular quizzes from Firestore (backend only)
@@ -131,4 +132,4 @@ async function getQuizTypeById(quizId: string): Promise<QuizType | null> {
 }
 
 
-export { addQuizRecordFirestore, getQuizzesNames, getPopularQuizzes, incrementQuizViewCount, getQuizById, getQuizTypeById };
+export { addQuizRecordFirestore, getQuizzesIdsWithNames, getPopularQuizzes, incrementQuizViewCount, getQuizById, getQuizTypeById };
