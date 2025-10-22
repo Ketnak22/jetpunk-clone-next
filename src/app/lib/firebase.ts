@@ -1,7 +1,9 @@
 'server-only';
 
 import admin from 'firebase-admin';
+
 import type QuizType from '@/app/types/QuizType';
+import FetchedGameData from '../types/FetchedGameData';
 
 // Only initialize once (for server-side)
 if (!admin.apps.length) {
@@ -91,16 +93,16 @@ async function incrementQuizViewCount(quizId: string) {
 }
 
 /**
- * Get quiz by ID from Firestore (backend only)
- * @param quizId string
- * @returns Quiz data
+ * Get game by ID from Firestore (backend only)
+ * @param gameId string
+ * @returns gameData FetchedGameData | null
  */
-async function getQuizById(quizId: string) {
+async function getGameById(gameId: string): Promise<FetchedGameData | null> {
     try {
-        const quizRef = firestoreDb.collection('quizzes').doc(quizId);
+        const quizRef = firestoreDb.collection('quizzes').doc(gameId);
         const doc = await quizRef.get();
         if (doc.exists) {
-            return doc.data();
+            return doc.data() as FetchedGameData;
         } else {
             throw new Error('Quiz not found');
         }
@@ -132,4 +134,4 @@ async function getQuizTypeById(quizId: string): Promise<QuizType | null> {
 }
 
 
-export { addQuizRecordFirestore, getQuizzesIdsWithNames, getPopularQuizzes, incrementQuizViewCount, getQuizById, getQuizTypeById };
+export { addQuizRecordFirestore, getQuizzesIdsWithNames, getPopularQuizzes, incrementQuizViewCount, getGameById, getQuizTypeById };

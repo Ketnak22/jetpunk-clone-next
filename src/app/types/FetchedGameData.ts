@@ -1,13 +1,6 @@
 import QuizType from "./QuizType";
-
-interface QuizJSONData {
-    question: string;
-    answers: string[];
-    keys?: string[];
-    headers?: string[];
-}
-
-type MapJSONData = Record<string, string>;  
+import QuizJSONData from "./QuizJSONData";
+import MapJSONData from "./MapJSONData";
 
 interface FetchedGameData {
     type: QuizType;
@@ -17,4 +10,4 @@ interface FetchedGameData {
     createdAt: number | Date;
 }
 
-export type { FetchedGameData, QuizJSONData, MapJSONData };
+export default FetchedGameData;

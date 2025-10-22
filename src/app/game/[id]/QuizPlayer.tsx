@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+
 import QuizData from "@/app/types/QuizData";
-import { FetchedGameData, QuizJSONData } from "@/app/types/FetchedGameData";
+import FetchedGameData from "@/app/types/FetchedGameData";
+import QuizJSONData from "@/app/types/QuizJSONData";
 
 import styles from "./QuizPlayer.module.css";
 
@@ -35,7 +37,7 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
 
     (async () => {
       try {
-        const res = await fetch(`/api/quiz/${encodeURIComponent(quizId)}`, {
+        const res = await fetch(`/api/game/${encodeURIComponent(quizId)}`, {
           cache: "no-store",
           signal: controller.signal,
         });

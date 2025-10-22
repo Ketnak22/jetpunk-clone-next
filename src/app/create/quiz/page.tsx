@@ -5,8 +5,8 @@ import styles from "./page.module.css"
 import { ChangeEvent, useRef, useState } from 'react';
 
 export default function Page() {
-    const [answersInputs, setAnswersInputs] = useState<string[]>([]);
-    const [keysInputs, setKeysInputs] = useState<string[]>([]);
+    const [answersInputs, setAnswersInputs] = useState<string[]>([""]);
+    const [keysInputs, setKeysInputs] = useState<string[]>([""]);
 
     const quizTypeSelectRef = useRef<HTMLSelectElement>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
@@ -89,7 +89,7 @@ export default function Page() {
                 </label>
                 <select id="quiz-type-select" className={styles['quiz-type-select']} ref={quizTypeSelectRef} onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                     if (e.target.value === "quiz") {
-                        setKeysInputs([]);
+                        setKeysInputs([""]);
                     } else if (e.target.value === "matchingQuiz") {
                         setKeysInputs(Array(answersInputs.length).fill(""));
                     }

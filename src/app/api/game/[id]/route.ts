@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getQuizById } from '@/app/lib/firebase';
+import { getGameById } from '@/app/lib/firebase';
 
 export async function GET(_req: Request, context: any) {
   const params = await context?.params;
   const { id } = params ?? {};
   try {
-    const raw = await getQuizById(id);
+    const raw = await getGameById(id);
     if (!raw) return NextResponse.json({ message: 'Not found' }, { status: 404 });
     return NextResponse.json(raw);
   } catch (err) {
