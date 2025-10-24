@@ -2,8 +2,6 @@
 
 import { useRef, useState, useEffect } from "react";
 
-import DOMPurify from "dompurify";
-
 import Dropzone from 'react-dropzone';
 import styles from './page.module.css';
 
@@ -92,11 +90,10 @@ export default function Home() {
         const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
         const pathNodes = doc.querySelectorAll('path');
 
-        // Serialize and sanitize SVG
+        // Serialize SVG
         const serializer = new XMLSerializer();
         const newSvg = serializer.serializeToString(doc.documentElement);
-        const sanitizedSvg = DOMPurify.sanitize(newSvg);
-        const svgBlob = new Blob([sanitizedSvg], { type: 'image/svg+xml' });
+        const svgBlob = new Blob([newSvg], { type: 'image/svg+xml' });
 
         // Create mapping of original ids to new ids
         const pathIdMapping: IdPathMapping = {};

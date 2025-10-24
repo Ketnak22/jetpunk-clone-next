@@ -8,6 +8,8 @@ import QuizJSONData from "@/app/types/QuizJSONData";
 
 import styles from "./QuizPlayer.module.css";
 
+import removePolishChars from "@/app/utils/removePolishChars";
+
 export default function QuizPlayer({ quizId }: { quizId: string }) {
   const [quiz, setQuiz] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,10 +20,10 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
     const value = e.target.value;
 
     quiz?.answers.forEach((answer, index) => {
-      const answerLower = answer.toLowerCase();
-      const valueLower = value.toLowerCase();
+      const answerNormalised = removePolishChars(answer).toLowerCase();
+      const valueNormalised = removePolishChars(value).toLowerCase();
 
-      if (answerLower === valueLower) {
+      if (answerNormalised === valueNormalised) {
         const tdElement = answersTdRef.current[index];
         if (tdElement && tdElement.textContent !== answer) {
           tdElement.textContent = answer;
