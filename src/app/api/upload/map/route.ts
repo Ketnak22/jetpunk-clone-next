@@ -9,8 +9,12 @@ const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
 
 // Zod schemas
-const nameSchema = z.string().min(1, { message: "Name must not be empty"}).max(50, { message: "Name must be less than 50 characters long!"})
+const maxInputLength = process.env.MAX_INPUT_LENGTH ? parseInt(process.env.MAX_INPUT_LENGTH) : 50;
+const nameSchema = z.string().min(1, { message: "Name must not be empty"}).max(maxInputLength, { message: `Name must be less than ${maxInputLength} characters long!`})
 const jsonSchema = z.record(z.string(), z.string());
+
+const maxSvgFileSizeKB = process.env.MAX_SVG_FILE_SIZE_KB ? parseInt(process.env.MAX_SVG_FILE_SIZE_KB) : 768;
+const maxJsonFileSizeKB = process.env.MAX_JSON_FILE_SIZE_KB ? parseInt(process.env.MAX_JSON_FILE_SIZE_KB) : 128;
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +32,14 @@ export async function POST(req: NextRequest) {
     }
     if (!nameData) {
       return NextResponse.json({ error: 'Name is required.' }, { status: 400 });
+    }
+
+    if (svgFile.size > maxSvgFileSizeKB * 1024) {
+      return NextResponse.json({ error: `SVG file size exceeds the limit of ${maxSvgFileSizeKB} KB.` }, { status: 400 });
+    }
+
+    if (jsonFile.size > maxJsonFileSizeKB * 1024) {
+      return NextResponse.json({ error: `JSON file size exceeds the limit of ${maxJsonFileSizeKB} KB.` }, { status: 400 });
     }
 
     // Validate and sanitize SVG file

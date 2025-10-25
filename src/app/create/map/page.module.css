@@ -37,7 +37,7 @@
         max-height: 50vh;
     }
 
-    .uploader-input-list {
+    .uploader-input-list-wrapper {
         max-height: 30vh;
         width: 90vw;
         justify-content: center;
@@ -64,7 +64,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.uploader-input-list {
+.uploader-input-list-wrapper {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -73,6 +73,13 @@
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 16px;
+
+}
+
+.uploader-input-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 
     overflow-y: scroll;
 }
@@ -95,6 +102,8 @@
     padding: 8px 12px;
     cursor: pointer;
     font-size: 14px;
+    width: fit-content;
+    align-self: center;
 }
 
 .uploader-down-div {

@@ -21,6 +21,7 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
     const [answeredPoints, setAnsweredPoints] = useState<Set<string>>(new Set());
     const [showResults, setShowResults] = useState<boolean>(false);
     const [highlightedPathId, setHighlightedPathId] = useState<string | null>(null);
+    const [pathFills, setPathFills] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const controller = new AbortController();
@@ -73,43 +74,45 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
     useEffect(() => {
         if (!svgContent || !svgContainerRef.current) return;
 
-        // Clear previous content
         svgContainerRef.current.innerHTML = '';
 
-        // Parse SVG string into DOM
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
         const svgElement = svgDoc.documentElement;
 
-        // Append parsed SVG
         svgContainerRef.current.appendChild(svgElement);
 
-        // Add event listeners
         const paths = svgElement.querySelectorAll<SVGPathElement>('path');
 
         const handleMouseEnter = (e: MouseEvent) => {
             const target = e.target as SVGPathElement;
             const id = target.id;
+            setHighlightedPathId(id);
+        };
 
-            if (showResults || answeredPoints.has(id)) {
-                setHighlightedPathId(id);
-            } else {
-                setHighlightedPathId(null);
-            }
+        const handleMouseLeave = () => {
+            setHighlightedPathId(null);
         };
 
         paths.forEach(path => {
             path.style.transition = 'fill 0.3s ease';
+            const pathId = path.id;
+            if (pathFills[pathId]) {
+                path.style.fill = pathFills[pathId];
+            }
+
             path.addEventListener('mouseenter', handleMouseEnter);
+            path.addEventListener('mouseleave', handleMouseLeave);
         });
 
         return () => {
             paths.forEach(path => {
                 path.removeEventListener('mouseenter', handleMouseEnter);
+                path.removeEventListener('mouseleave', handleMouseLeave);
             });
         };
-    }, [svgContent, showResults, answeredPoints]);
-    
+    }, [svgContent, pathFills]);
+
     if (loading) return <div className={styles["status-message"]}>Loading…</div>;
     if (error) return <div className={styles["status-message error"]}>{error}</div>;
     if (!mapData) return <div className={styles["status-message"]}>Map not available.</div>;
@@ -117,38 +120,36 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
     const handleAnswerInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
 
-        for (let pathId in mapData.jsonData) {
+        for (const pathId in mapData.jsonData) {
             const answer = mapData.jsonData[pathId];
 
             const answerNormalized = removePolishChars(answer).toLowerCase();
             const valueNormalized = removePolishChars(value).toLowerCase();
-            if (answerNormalized === valueNormalized) {
-                const pathElement = svgContainerRef.current?.querySelector<SVGPathElement>(`#${CSS.escape(pathId)}`);
-                if (pathElement) {
-                    pathElement.style.setProperty('fill', 'green', 'important'); 
-                }
-
-                // TODO - FIX HIGHLIGHTING NOT WORKING
-                
+            if (answerNormalized === valueNormalized && !answeredPoints.has(pathId)) {
                 e.target.value = "";
-                setAnsweredPoints(prev => new Set(prev).add(pathId));
-                setPoints(answeredPoints.size + 1);
-                setShowResults(answeredPoints.size + 1 === maxPoints);
+                setAnsweredPoints(prev => {
+                    const updated = new Set(prev).add(pathId);
+                    setPoints(updated.size);
+                    if (updated.size === maxPoints) {
+                        setShowResults(true);
+                    }
+                    return updated;
+                });
+                setPathFills(prev => ({ ...prev, [pathId]: "green" }));
                 break;
             }
         }
     };
 
     const handleGiveUp = () => {
-        for (let pathId in mapData.jsonData) {
-            const pathElement = svgContainerRef.current?.querySelector<SVGPathElement>(`#${CSS.escape(pathId)}`);
-
-            if (pathElement && !answeredPoints.has(pathId)) {
-                pathElement.style.fill = "red";
+        const newPathFills = { ...pathFills };
+        for (const pathId in mapData.jsonData) {
+            if (!answeredPoints.has(pathId)) {
+                newPathFills[pathId] = "red";
             }
-
-            setShowResults(true);
         }
+        setPathFills(newPathFills);
+        setShowResults(true);
     }
 
     return (
@@ -172,8 +173,8 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
 
             <div ref={svgContainerRef} className={styles['svg-container']} />
 
-            {highlightedPathId && mapData.jsonData[highlightedPathId] && (
-                <div className={styles['tooltip']}>
+            {(showResults || (highlightedPathId && answeredPoints.has(highlightedPathId))) && highlightedPathId && mapData.jsonData[highlightedPathId] && (
+                <div className={styles['tooltip']} style={{ color: pathFills[highlightedPathId] || 'black' }}>
                     {mapData.jsonData[highlightedPathId]}
                 </div>
             )}

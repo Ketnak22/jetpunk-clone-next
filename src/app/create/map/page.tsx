@@ -1,29 +1,31 @@
 'use client';
 
-import { useRef, useState, useEffect } from "react";
-
+import { useRef, useState, useEffect, ChangeEvent } from "react";
 import Dropzone from 'react-dropzone';
 import styles from './page.module.css';
+import { map } from "zod";
 
-interface PathStyle {
-    fill?: string;
+interface PathState {
+    originalId: string;
+    originalFill: string;
+    customName: string;
+    isExcluded: boolean;
 }
 
 type IdPathMapping = {
     [key: string]: string;
 }
 
-export default function Home() {
+export default function Page() {
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-    const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
-    const nameInputRef = useRef<HTMLInputElement | null>(null);
 
     const [svgContent, setSvgContent] = useState<string | null>(null);
     const [originalSvgContent, setOriginalSvgContent] = useState<string | null>(null);
-    const [initialPathStyle, setInitialPathStyle] = useState<PathStyle[]>([]);
-    const [paths, setPaths] = useState<SVGPathElement[]>([]);
 
+    // Unified state for all path-related data (fills, ids, user inputs)
+    const [pathStates, setPathStates] = useState<PathState[]>([]);
+    const [mapName, setMapName] = useState<string>('');
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     const handleDrop = (acceptedFiles: File[]) => {
@@ -33,129 +35,137 @@ export default function Home() {
             reader.onload = (e) => {
                 const text = e.target?.result as string;
                 setSvgContent(text);
-                setOriginalSvgContent(text); // Save original SVG for later use
+                setOriginalSvgContent(text);
 
-                // Parse SVG and extract path elements
                 try {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(text, 'image/svg+xml');
-                    const pathNodes = doc.querySelectorAll('path');
-                    setPaths(Array.from(pathNodes) as SVGPathElement[]);
+                    const pathNodes = Array.from(doc.querySelectorAll('path'));
 
-                    setInitialPathStyle(Array.from(pathNodes).map(path => ({
-                        fill: path.style.fill || '',
-                    })));
+                    // Extract initial state from DOM nodes once
+                    const initialStates: PathState[] = pathNodes.map(path => ({
+                        originalId: path.id || '',
+                        originalFill: path.style.fill || '',
+                        customName: '',
+                        isExcluded: false
+                    }));
+                    setPathStates(initialStates);
                 } catch (err) {
-                    setPaths([]);
-                    setInitialPathStyle([]);
+                    console.error("Error parsing SVG:", err);
+                    setPathStates([]);
                 }
             };
             reader.readAsText(file);
-        } else {
-            setSvgContent(null);
-            setPaths([]);
-            setInitialPathStyle([]);
-            setOriginalSvgContent(null);
         }
     };
 
-    // Highlight path on hover and handle click-to-focus
+    // Synchronize SVG DOM with React state for highlighting and interactions
     useEffect(() => {
         if (!containerRef.current) return;
         const svgPaths = Array.from(containerRef.current.querySelectorAll('path'));
+
         svgPaths.forEach((path, idx) => {
+            const state = pathStates[idx];
+            if (!state) return;
+
             path.style.transition = 'fill 0.2s, stroke 0.2s';
+
+            // Apply fill based on hover state
             if (hoveredIndex === idx) {
                 path.style.fill = '#ffe5b4';
             } else {
-                path.style.fill = initialPathStyle[idx]?.fill || '';
+                path.style.fill = state.originalFill || '';
             }
-            path.onclick = null;
+
+            // Attach event listeners to sync with React state
             path.onclick = () => {
                 inputRefs.current[idx]?.focus();
-                svgPaths.forEach((p, j) => {
-                    p.style.fill = initialPathStyle[j]?.fill || '';
-                });
-                path.style.fill = '#ffe5b4';
+                setHoveredIndex(idx);
             };
+            path.onmouseenter = () => setHoveredIndex(idx);
+            path.onmouseleave = () => setHoveredIndex(null);
         });
-    }, [hoveredIndex, svgContent, paths, initialPathStyle]);
 
-    const handleUploadClick = () => {
-        if (!originalSvgContent) return;
-        if (!nameInputRef.current?.value) return;
+        // Cleanup listeners
+        return () => {
+            svgPaths.forEach(path => {
+                path.onclick = null;
+                path.onmouseenter = null;
+                path.onmouseleave = null;
+            });
+        }
+    }, [hoveredIndex, pathStates, svgContent]);
 
-        // Parse original SVG
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(originalSvgContent, 'image/svg+xml');
-        const pathNodes = doc.querySelectorAll('path');
+    const handleUploadClick = async () => {
+        if (!originalSvgContent || !mapName) return;
 
-        // Serialize SVG
-        const serializer = new XMLSerializer();
-        const newSvg = serializer.serializeToString(doc.documentElement);
-        const svgBlob = new Blob([newSvg], { type: 'image/svg+xml' });
+        // Re-create the blob from the original content
+        const svgBlob = new Blob([originalSvgContent], { type: 'image/svg+xml' });
 
-        // Create mapping of original ids to new ids
+        // Generate mapping from state instead of querying DOM inputs
         const pathIdMapping: IdPathMapping = {};
-
-        // Replace ids with input values or empty string when disabled
-        pathNodes.forEach((path, i) => {
-            if (inputRefs.current[i]?.disabled) return;
-            if (path.id) {
-                pathIdMapping[path.id] = inputRefs.current[i]?.value || path.id;
+        pathStates.forEach(state => {
+            if (!state.isExcluded && state.originalId) {
+                pathIdMapping[state.originalId] = state.customName || state.originalId;
             }
         });
 
         const formData = new FormData();
         formData.append('svg', svgBlob, 'map.svg');
-        const jsonData = pathIdMapping ? JSON.stringify(pathIdMapping) : '{}';
-        const jsonBlob = new Blob([jsonData], { type: 'application/json' });
-        formData.append('json', jsonBlob, 'data.json');
-        formData.append('name', nameInputRef.current.value);
+        formData.append('json', new Blob([JSON.stringify(pathIdMapping)], { type: 'application/json' }), 'data.json');
+        formData.append('name', mapName);
 
-        fetch('/api/upload/map', {
-            method: 'POST',
-            body: formData,
-        }).then(response => {
-            if (response.status === 200) {
+        try {
+            const response = await fetch('/api/upload/map', { method: 'POST', body: formData });
+            if (response.ok) {
                 console.log('Map uploaded successfully');
-
                 window.location.href = '/';
             } else {
-                response.text().then(errorText => {
-                    console.error(`Error uploading map: ${response.status} - ${errorText}`);
-                });
+                const errorText = await response.text();
+                console.error(`Error uploading map: ${response.status} - ${errorText}`);
             }
-        }).catch(error => {
+        } catch (error) {
             console.error('Error uploading map:', error);
-        })
-
+        }
     };
 
-    const handleRemoveClick = (index: number, pathId: string) => {
-        if (inputRefs.current[index]) {
-            if (inputRefs.current[index]!.disabled) {
-                inputRefs.current[index]!.disabled = false;
+    const handleInputChange = (index: number, value: string) => {
+        setPathStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = { ...newStates[index], customName: value };
+            return newStates;
+        });
+    };
 
-                buttonRefs.current[index]!.textContent = 'X';
-                buttonRefs.current[index]!.style.backgroundColor = '#ff4d4f'; // light red
-            } else {
-                inputRefs.current[index]!.disabled = true;
+    const togglePathExclusion = (index: number) => {
+        setPathStates(prev => {
+            const newStates = [...prev];
+            const current = newStates[index];
+            newStates[index] = {
+                ...current,
+                isExcluded: !current.isExcluded,
+                // Clear custom name if excluded, akin to original clearing value
+                customName: !current.isExcluded ? '' : current.customName
+            };
+            return newStates;
+        });
+    };
 
-                inputRefs.current[index]!.value = '';
-                inputRefs.current[index]!.placeholder = pathId || '';
+    const areAllPathsExcluded = pathStates.length > 0 && pathStates.every(state => state.isExcluded);
 
-                buttonRefs.current[index]!.textContent = '↺';
-                buttonRefs.current[index]!.style.backgroundColor = '#f0ad4e'; // light orange
-            }
-        }
-        const updatedPaths = [...paths];
-        updatedPaths[index].id = '';
-        setPaths(updatedPaths);
-    }
+    const toggleAllPathExclusion = () => {
+        const someExcluded = pathStates.some(state => state.isExcluded);
+        setPathStates(prev => prev.map(state => ({
+            ...state,
+            isExcluded: !someExcluded,
+            customName: !someExcluded ? '' : state.customName
+        })));
+    };
+
+
     return (
         <div className={styles['uploader-container']}>
-            {!svgContent && paths.length === 0 &&
+            {!svgContent &&
                 <Dropzone accept={{ 'image/svg+xml': ['.svg'] }} onDrop={handleDrop}>
                     {({ getRootProps, getInputProps }) => (
                         <section>
@@ -167,42 +177,63 @@ export default function Home() {
                     )}
                 </Dropzone>
             }
-            {svgContent && paths.length > 0 && (
+            {svgContent && (
                 <>
                     <div className={styles['uploader-svg-preview']}>
                         <div
                             ref={containerRef}
-                            dangerouslySetInnerHTML={{ __html: svgContent }} // Load SVG into HTML
+                            dangerouslySetInnerHTML={{ __html: svgContent }}
                         />
                     </div>
 
-                    <div className={styles['uploader-interaction']}>
-                        <div className={styles['uploader-input-list']}>
-                            {paths.map((path: SVGPathElement, i: number) => (
-                                <div className={styles['uploader-input']} key={i}>
-                                    <input
-                                        type="text"
-                                        minLength={1}
-                                        maxLength={50}
-                                        placeholder={path.id || ''}
-                                        ref={el => { inputRefs.current[i] = el; }}
-                                        onFocus={() => setHoveredIndex(i)}
-                                        onMouseEnter={() => setHoveredIndex(i)}
-                                    />
-                                    <button
-                                        className={styles['uploader-input-btn']}
-                                        ref={el => { buttonRefs.current[i] = el }}
-                                        onClick={() => handleRemoveClick(i, path.id)}>X</button>
-                                </div>
-                            ))}
+
+                    <div className={styles['uploader-input-list-wrapper']}>
+                        <div className={styles['uploader-interaction']}>
+                            <button
+                                className={styles['uploader-input-btn']}
+                                style={{ backgroundColor: areAllPathsExcluded ? '#f0ad4e' : '#ff4d4f' }}
+                                onClick={toggleAllPathExclusion}
+                            >
+                                {areAllPathsExcluded ? 'Zawieraj wszystko' : 'Wyłącz wszystko'}
+                            </button>
+
+                            <div className={styles['uploader-input-list']}>
+                                {pathStates.map((state, i) => (
+                                    <div className={styles['uploader-input']} key={i} 
+                                        onMouseEnter={() => { if (state.isExcluded) setHoveredIndex(i)}}
+                                        onMouseLeave={() => { if (state.isExcluded) setHoveredIndex(null)}}
+                                    >
+                                        <input
+                                            type="text"
+                                            minLength={1}
+                                            maxLength={50}
+                                            placeholder={state.originalId || ''}
+                                            value={state.customName}
+                                            disabled={state.isExcluded}
+                                            ref={el => { inputRefs.current[i] = el; }}
+                                            onChange={(e) => handleInputChange(i, e.target.value)}
+                                            onFocus={() => setHoveredIndex(i)}                                            
+                                        />
+                                        <button
+                                            className={styles['uploader-input-btn']}
+                                            style={{ backgroundColor: state.isExcluded ? '#f0ad4e' : '#ff4d4f' }}
+                                            onClick={() => togglePathExclusion(i)}
+                                        >
+                                            {state.isExcluded ? '↺' : 'X'}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
                         </div>
 
                         <div className={styles['uploader-down-div']}>
                             <input
                                 type='text'
-                                ref={nameInputRef}
                                 placeholder='Wpisz nazwę mapy...'
                                 className={styles['uploader-name-input']}
+                                value={mapName}
+                                onChange={(e) => setMapName(e.target.value)}
                             />
                             <button className={styles['uploader-btn']} onClick={handleUploadClick}>Wyślij</button>
                         </div>

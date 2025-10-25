@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { addQuizRecordFirestore } from '@/app/lib/firebase';
 
 // Zod schema for validating the quiz JSON structure
+const maxInputLength = process.env.MAX_INPUT_LENGTH ? parseInt(process.env.MAX_INPUT_LENGTH) : 50;
 const preparedJsonSchema = z
   .object({
     question: z
       .string()
       .min(1, { message: 'Question must not be empty.' })
-      .max(50, { message: 'Question must be less than 50 characters.' }),
+      .max(maxInputLength, { message: `Question must be less than ${maxInputLength} characters.` }),
     type: z.enum(['quiz', 'matchingQuiz'], {
       message: 'Type must be either "quiz" or "matchingQuiz".',
     }),
@@ -18,7 +19,7 @@ const preparedJsonSchema = z
         z
           .string()
           .min(1, { message: 'Answer must not be empty.' })
-          .max(50, { message: 'Answer must be less than 50 characters.' })
+          .max(maxInputLength, { message: `Answer must be less than ${maxInputLength} characters.` })
       )
       .min(1, { message: 'Answers array must contain at least one item.' }),
     keys: z
@@ -26,7 +27,7 @@ const preparedJsonSchema = z
         z
           .string()
           .min(1, { message: 'Key must not be empty.' })
-          .max(50, { message: 'Key must be less than 50 characters.' })
+          .max(maxInputLength, { message: `Key must be less than ${maxInputLength} characters.` })
       )
       .optional(),
     headers: z
@@ -34,7 +35,7 @@ const preparedJsonSchema = z
         z
           .string()
           .min(1, { message: 'Header must not be empty.' })
-          .max(50, { message: 'Header must be less than 50 characters.' })
+          .max(maxInputLength, { message: `Header must be less than ${maxInputLength} characters.` })
       )
       .optional(),
   })
@@ -64,10 +65,21 @@ const nameSchema = z
   .min(1, { message: 'Name must not be empty.' })
   .max(50, { message: 'Name must be less than 50 characters long.' });
 
+const maxJsonFileSizeKB = process.env.MAX_JSON_FILE_SIZE_KB ? parseInt(process.env.MAX_JSON_FILE_SIZE_KB) : 128;
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const quizDataRaw = formData.get('quizData');
   const name = formData.get('name');
+
+  const quizDataRawSize = typeof quizDataRaw === 'string' ? new TextEncoder().encode(quizDataRaw).length : 0;
+  if (quizDataRawSize > maxJsonFileSizeKB * 1024) {
+    return NextResponse.json({ error: `JSON file size exceeds the limit of ${maxJsonFileSizeKB} KB.` }, { status: 400 });
+  }
+
+  if (!name || typeof name !== 'string') {
+    return NextResponse.json({ error: 'Name is required and must be a string.' }, { status: 400 });
+  }
 
   const nameValidation = nameSchema.safeParse(name);
   if (!nameValidation.success) {
