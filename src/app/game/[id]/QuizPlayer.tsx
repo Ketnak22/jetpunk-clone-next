@@ -14,6 +14,11 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
   const [quiz, setQuiz] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [points, setPoints] = useState<number>(0);
+  const [maxPoints, setMaxPoints] = useState<number>(0);
+
+  const [showResults, setShowResults] = useState<boolean>(false);
+
   const answersTdRef = useRef<Array<HTMLTableCellElement | null>>([]);
 
   const handleAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,11 +33,31 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
         if (tdElement && tdElement.textContent !== answer) {
           tdElement.textContent = answer;
           tdElement.classList.add("correct-answer");
+
+          setPoints((prev) => prev + 1);
+
           e.target.value = "";
+
+          if (points + 1 == maxPoints) {
+            e.target.disabled = true;
+            setShowResults(true);
+          }
+
         }
       }
     });
   };
+
+  const handleGiveUp = () => {
+    setShowResults(true);
+    quiz?.answers.forEach((answer, index) => {
+      const tdElement = answersTdRef.current[index];
+      if (tdElement && tdElement.textContent !== answer) {
+        tdElement.textContent = answer;
+        tdElement.style.color = "#e02c4d";
+      }
+    });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,6 +93,7 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
         }
 
         setQuiz(quiz);
+        setMaxPoints(quiz.answers.length);
       } catch (err: any) {
         if (!controller.signal.aborted) {
           console.error(err);
@@ -91,32 +117,63 @@ export default function QuizPlayer({ quizId }: { quizId: string }) {
 
   return (
     <div className={styles['quiz-player-container']}>
-      <h1 className={styles["quiz-question"]}>{quiz.question}</h1>
-      <input
-        type="text"
-        placeholder="Wpisz odpowiedź tutaj"
-        onChange={handleAnswerChange}
-        className={styles["quiz-input"]}
-      />
+      <div className={styles['quiz-card']}>
+        <h1 className={styles["quiz-question"]}>{quiz.question}</h1>
+        <div className={styles['quiz-controls']}>
+          <div className={styles['points-display']}>
+            <span>Punkty</span>
+            <p>{points} / {maxPoints}</p>
+          </div>
+          {!showResults &&
+            <button className={styles['give-up-btn']} onClick={handleGiveUp}>
+              Poddaj się
+            </button>
+          }
+        </div>
+        {!showResults ? (
+          <input
+            type="text"
+            placeholder="Wpisz odpowiedź..."
+            onChange={handleAnswerChange}
+            className={styles["quiz-input"]}
+            autoFocus
+          />
+        ) : (
+          <div className={styles['results']}>
+            <h2>Koniec!</h2>
+            <p>Twój ostateczny wynik to {points} na {maxPoints} punktów.</p>
+          </div>
+        )
+        }
 
-      <table className={styles["quiz-table"]}>
-        <tbody>
-          {quiz.type === "matchingQuiz" && quiz.headers ? (
-            <tr>
-              <th>{quiz.headers[0]}</th>
-              <th>{quiz.headers[1]}</th>
-            </tr>
-          ) : null}
-          {quiz.answers.map((_, index) => (
-            <tr key={index}>
-              {quiz.type === "matchingQuiz" && quiz.keys ? (
-                <td>{quiz.keys[index]}</td>
-              ) : null}
-              <td ref={el => { answersTdRef.current[index] = el; }}></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <div className={styles['table-wrapper']}>
+          <table className={styles["quiz-table"]}>
+            {quiz.type === "matchingQuiz" && quiz.headers && (
+              <thead>
+                <tr>
+                  <th>{quiz.headers[0]}</th>
+                  <th>{quiz.headers[1]}</th>
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {quiz.answers.map((_, index) => (
+                <tr key={index}>
+                  {quiz.type === "matchingQuiz" && quiz.keys ? (
+                    <td className={styles['key-cell']}>{quiz.keys[index]}</td>
+                  ) : null}
+                  <td
+                    ref={el => { answersTdRef.current[index] = el; }}
+                    className={styles['answer-cell']}
+                  >
+                    {/* The blank space is intentional */}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

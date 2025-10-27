@@ -22,6 +22,19 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
     const [showResults, setShowResults] = useState<boolean>(false);
     const [highlightedPathId, setHighlightedPathId] = useState<string | null>(null);
     const [pathFills, setPathFills] = useState<Record<string, string>>({});
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            setTooltipPosition({ x: e.clientX, y: e.clientY });
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -156,28 +169,51 @@ export default function MapPlayer({ mapId }: { mapId: string }) {
         <div className={styles['map-player-container']}>
             <h1 className={styles["quiz-question"]}>{mapData.name}</h1>
 
-            <div className={styles['quiz-interact-div']}>
-                {!showResults &&
-                    <>
-                        <input type="text" placeholder="Wpisz odpowiedź..." className={styles['answer-input']} onChange={handleAnswerInput} />
-                        <button className={styles['give-up-btn']} onClick={handleGiveUp}>Poddaj się</button>
-                    </>
-                }
+            <div className={styles['controls-card']}>
+                <div className={styles['points-display']}>
+                    <span>Punkty</span>
+                    <p>{points} / {maxPoints}</p>
+                </div>
 
-                {showResults && (
-                    <div className={styles['results']}>
-                        {points} / {maxPoints}
-                    </div>
-                )}
+                <div className={styles['quiz-interact-div']}>
+                    {!showResults ? (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="Wpisz odpowiedź..."
+                                className={styles['answer-input']}
+                                onChange={handleAnswerInput}
+                                autoFocus
+                            />
+                            <button className={styles['give-up-btn']} onClick={handleGiveUp}>
+                                Poddaj się
+                            </button>
+                        </>
+                    ) : (
+                        <div className={styles['results']}>
+                            <h2>Koniec!</h2>
+                            <p>Twój ostateczny wynik to {points} na {maxPoints} punktów.</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div ref={svgContainerRef} className={styles['svg-container']} />
 
-            {(showResults || (highlightedPathId && answeredPoints.has(highlightedPathId))) && highlightedPathId && mapData.jsonData[highlightedPathId] && (
-                <div className={styles['tooltip']} style={{ color: pathFills[highlightedPathId] || 'black' }}>
-                    {mapData.jsonData[highlightedPathId]}
-                </div>
-            )}
+            {(showResults || (highlightedPathId && answeredPoints.has(highlightedPathId))) &&
+                highlightedPathId &&
+                mapData.jsonData[highlightedPathId] && (
+                    <div
+                        className={styles['tooltip']}
+                        style={{
+                            left: `${tooltipPosition.x}px`,
+                            top: `${tooltipPosition.y}px`,
+                            color: pathFills[highlightedPathId] || 'white'
+                        }}
+                    >
+                        {mapData.jsonData[highlightedPathId]}
+                    </div>
+                )}
         </div>
     );
 }
