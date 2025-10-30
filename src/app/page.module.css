@@ -1,93 +1,88 @@
-/* main {
-    margin-top: 30px;
-    margin-bottom: 0;
-    margin-left: 20vw;
-    margin-right: 20vw;
+
+.mainContent {
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto;
 }
-   */
- .headerElementsContainer {
-    margin-left: auto;
-    margin-right: auto;
-    width: 60vw;
-    height: 100%;
+
+.contentWrapper {
+  display: flex;
+  gap: 40px;
 }
- .navContainer * {
-    float: left;
-    height: 30px;
-    margin-right: 5px;
+
+.quizListSection {
+  flex: 3;
 }
- .searchHolder {
-    position: relative;
+
+.titleHolder h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #222;
 }
- .searchHolderInput {
-   width: 100%;
-    padding-right: 50px;
-    height: 30px;
-    box-sizing: border-box;
+
+.titleHolder h2 {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
 }
-  
- .searchHolderButton {
-    position: absolute;
-    right: -8px;
-    top: 5px;
-    height: 20px;
-    border: none;
-    background: none;
-    color: white;
-    padding: 0 10px;
-    cursor: pointer;
+
+.quizList {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
-          
-  
- .searchHolderButtonImg {
-    height: 100%;
-    width: 80%;
+
+.popularQuizzesSidebar {
+  flex: 1;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  height: fit-content;
 }
- .navContainer {
-    float: right;
-    height: 100%;
-    display: flex;
-    align-items: center;
+
+.popularQuizzesSidebar h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
 }
- .jetpunkLogo {
-    width: 250px;
+
+.popularQuizzesSidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
- .searchImg {
-    width: 10px;
+
+.popularQuizzesSidebar li {
+  margin-bottom: 12px;
 }
- .header {
-    width: 100%;
-    height: 45px;
-    background-color: brown;
+
+.popularQuizzesSidebar li a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+  transition: color 0.2s;
 }
- .titleHolder {
-    width: 50%;
+
+.popularQuizzesSidebar li a:hover {
+  color: #0056b3;
+  text-decoration: underline;
 }
- .quizList {
-    background-color: white;
-    height: 80vh;
-    width: 50%;
-    border-radius: 30px;
-    padding-top: 20px;
+
+.quizElementContainer {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  padding: 15px;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
- .quizElementContainer {
-    margin-bottom: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
-    border-radius: 30px;
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
-    padding: 5px;
-}
- .popularQuizes {
-    width: 35%;
-    height: 70vh;
-    background-color: white;
-    float: right;
-    padding: 20px;
-    border-radius: 10px;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px;
+
+.quizElementContainer:hover {
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }

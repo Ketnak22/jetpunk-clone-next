@@ -65,11 +65,13 @@ async function getQuizzesIdsWithNames(): Promise<{ id: string, name: string }[]>
  * Get popular quizzes from Firestore (backend only)
  * @returns Array of popular quizzes
  */
-async function getPopularQuizzes(limit: number = 3) {
+async function getPopularQuizzes(limit: number = 3): Promise<{ id: string, name: string}[] | null> {
     try {
         const snapshot = await firestoreDb.collection('quizzes').orderBy('viewCount', 'desc').limit(limit).get();
-        const popularQuizzes = snapshot.docs.map(doc => doc.data().name);
-        return popularQuizzes;
+        return snapshot.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name
+        }));
     } catch (error) {
         console.error('Error fetching popular quizzes from Firestore:', error);
         throw error;

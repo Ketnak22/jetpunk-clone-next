@@ -9,44 +9,30 @@ export default async function Home() {
 
   return (
     <>
-      <header className={styles['header']}>
-        <div className={styles['headerElementsContainer']}>
-          <img className={styles['jetpunkLogo']} src="/logo.png" width="190" height="65" alt="home" />
-          <div className={styles['navContainer']}>
-            <button>
-              <a href="/create/quiz">Stwórz quiz</a>
-            </button>
-            <button>
-              <a href="/create/map">Prześlij mapę</a>
-            </button>
-            <div className={styles['searchHolder']}>
-              <input type="text" placeholder="Wyszukaj quiz" className={styles['searchHolderInput']} />
-              <button type="button" className={styles['searchHolderButton']}>
-                &#128269;
-              </button>
+      <main className={styles.mainContent}>
+        <div className={styles.contentWrapper}>
+          <section className={styles.quizListSection}>
+            <div className={styles.titleHolder}>
+              <h1>Witaj w Odrzutowiec2Wakacje</h1>
+              <h2>Dostępne Quizy</h2>
             </div>
-          </div>
+            <div className={styles.quizList}>
+              <QuizSelector quizzes={quizIdsNames} />
+            </div>
+          </section>
+
+          <aside className={styles.popularQuizzesSidebar}>
+            <h3>Popularne Quizy</h3>
+            <ul>
+              {popularQuizzes!.map((quizName, index) => (
+                <li key={index}>
+                  <a href={`/game/${quizName.id}`}>{quizName.name}</a>
+                </li>
+              ))}
+            </ul>
+          </aside>
         </div>
-      </header>
-
-      <div className={styles['titleHolder']}>
-        <h1>Witaj w Odrzutowiec2Wakacje</h1>
-        <h2>Lista quizów:</h2>
-      </div>
-      <div className={styles['popularQuizes']}>
-        <label>Popularne quizy:</label>
-        <ul>
-          {popularQuizzes.map((quizName, index) => (
-            <li key={index}>
-              {quizName}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className={styles['quizList']}>
-        <QuizSelector quizzes={quizIdsNames} />
-      </div>
+      </main>
     </>
-  )
+  );
 }
