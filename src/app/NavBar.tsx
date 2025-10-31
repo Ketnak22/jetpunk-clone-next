@@ -7,10 +7,9 @@ export default function NavBar() {
         <header className={styles.header}>
         <div className={styles.headerContainer}>
           <a href="/" className={styles.logoLink}>
-            <Image src="/logo.png" width={170} height={58} alt="Homepage Logo" priority />
+            <Image className={"logoImage"} src="/logo.png" width={218.5} height={55} alt="Homepage Logo" priority />
           </a>
           <nav className={styles.navContainer}>
-            <a href="/" className={styles.navButton}>Strona główna</a>
             <a href="/create/quiz" className={styles.navButton}>Stwórz quiz</a>
             <a href="/create/map" className={styles.navButton}>Prześlij mapę</a>
             <div className={styles.searchHolder}>
